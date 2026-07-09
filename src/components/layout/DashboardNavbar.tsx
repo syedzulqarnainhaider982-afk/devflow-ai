@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Menu, LogOut, User as UserIcon } from "lucide-react";
 import { toast } from "sonner";
 
@@ -99,9 +100,11 @@ export const DashboardNavbar = () => {
               </DropdownMenuLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator className="bg-white/10" />
-            <DropdownMenuItem className="cursor-pointer hover:bg-white/10 focus:bg-white/10" onClick={() => router.push("/dashboard/settings")}>
-              <UserIcon className="mr-2 h-4 w-4" />
-              <span>Profile Settings</span>
+            <DropdownMenuItem className="cursor-pointer hover:bg-white/10 focus:bg-white/10 p-0">
+              <Link href="/dashboard/settings" className="flex items-center w-full px-2 py-1.5">
+                <UserIcon className="mr-2 h-4 w-4" />
+                <span>Profile Settings</span>
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem 
               className="cursor-pointer text-red-500 hover:bg-white/10 focus:bg-white/10 focus:text-red-500" 

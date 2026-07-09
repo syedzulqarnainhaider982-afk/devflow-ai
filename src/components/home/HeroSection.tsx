@@ -53,9 +53,11 @@ export default function HeroSection({ isAuthenticated = false }: { isAuthenticat
               {isAuthenticated ? "Go to Dashboard" : "Start Building for Free"} <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </Link>
-          <Button size="lg" variant="outline" className="rounded-full px-8 text-base h-12 w-full sm:w-auto border-white/10 hover:bg-white/5 bg-transparent">
-            View Documentation
-          </Button>
+          <Link href="#features" className="w-full sm:w-auto">
+            <Button size="lg" variant="outline" className="rounded-full px-8 text-base h-12 w-full sm:w-auto border-white/10 hover:bg-white/5 bg-transparent">
+              Explore Features
+            </Button>
+          </Link>
         </motion.div>
       </div>
     </section>

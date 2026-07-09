@@ -28,9 +28,11 @@ export default function CTASection({ isAuthenticated = false }: { isAuthenticate
                 {isAuthenticated ? "Go to Dashboard" : "Get Started for Free"} <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="rounded-full px-8 text-base h-14 border-white/10 hover:bg-white/5 bg-transparent">
-              Talk to Sales
-            </Button>
+            <Link href="#pricing" className="w-full sm:w-auto">
+              <Button size="lg" variant="outline" className="rounded-full px-8 text-base h-14 border-white/10 hover:bg-white/5 bg-transparent w-full">
+                View Pricing
+              </Button>
+            </Link>
           </div>
         </motion.div>
       </div>

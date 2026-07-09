@@ -86,7 +86,9 @@ export default function Pricing({ isAuthenticated = false }: { isAuthenticated?:
                 </li>
               ))}
             </ul>
-            <Button className="w-full" variant="outline">Contact Sales</Button>
+            <Link href="mailto:support@devflow-ai.com" className="block w-full">
+              <Button className="w-full" variant="outline">Contact Sales</Button>
+            </Link>
           </motion.div>
         </div>
       </div>

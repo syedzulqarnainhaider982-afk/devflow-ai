@@ -6,7 +6,7 @@ import { Loader2, Code2, Globe, MessageSquare, Workflow, ExternalLink, FolderKan
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface ProjectAsset {
   id: string;
@@ -19,7 +19,6 @@ interface ProjectAsset {
 export function ProjectAssets({ projectId }: { projectId: string }) {
   const [assets, setAssets] = useState<ProjectAsset[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
 
   const fetchAssets = async () => {
     setIsLoading(true);
@@ -53,14 +52,13 @@ export function ProjectAssets({ projectId }: { projectId: string }) {
     }
   };
 
-  const navigateToAsset = (type: string, id: string) => {
-    // Navigate to respective module (we can pass id in query params if needed to auto-load, 
-    // for now we just navigate to the module)
+  const getAssetUrl = (type: string) => {
     switch (type) {
-      case "code": router.push("/dashboard/code-gen"); break;
-      case "website": router.push("/dashboard/website-gen"); break;
-      case "chat": router.push("/dashboard/chat"); break;
-      case "n8n": router.push("/dashboard/n8n"); break;
+      case "code": return "/dashboard/code-gen";
+      case "website": return "/dashboard/website-gen";
+      case "chat": return "/dashboard/chat";
+      case "n8n": return "/dashboard/n8n";
+      default: return "/dashboard";
     }
   };
 
@@ -100,14 +98,15 @@ export function ProjectAssets({ projectId }: { projectId: string }) {
             <span className="text-xs text-white/30">
               {formatDistanceToNow(new Date(asset.created_at), { addSuffix: true })}
             </span>
-            <Button 
-              size="sm" 
-              variant="ghost" 
-              className="h-7 text-xs bg-white/5 hover:bg-white/10"
-              onClick={() => navigateToAsset(asset.asset_type, asset.asset_id)}
-            >
-              Open module
-            </Button>
+            <Link href={getAssetUrl(asset.asset_type)}>
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                className="h-7 text-xs bg-white/5 hover:bg-white/10"
+              >
+                Open module
+              </Button>
+            </Link>
           </div>
         </div>
       ))}

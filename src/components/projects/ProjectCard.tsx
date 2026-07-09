@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface Project {
   id: string;
@@ -16,13 +16,12 @@ interface Project {
 }
 
 export function ProjectCard({ project }: { project: Project }) {
-  const router = useRouter();
   
   return (
-    <Card 
-      onClick={() => router.push(`/dashboard/projects/${project.id}`)}
-      className="p-6 bg-white/5 border-white/10 hover:bg-white/10 transition cursor-pointer flex flex-col justify-between h-48 group relative overflow-hidden"
-    >
+    <Link href={`/dashboard/projects/${project.id}`} className="block h-full">
+      <Card 
+        className="p-6 bg-white/5 border-white/10 hover:bg-white/10 transition cursor-pointer flex flex-col justify-between h-48 group relative overflow-hidden"
+      >
       <div className="absolute top-0 left-0 w-1 h-full bg-primary/50 opacity-0 group-hover:opacity-100 transition-opacity" />
       <div>
         <div className="flex items-start justify-between mb-2">
@@ -53,6 +52,7 @@ export function ProjectCard({ project }: { project: Project }) {
         <Clock className="w-3 h-3" /> 
         Updated {formatDistanceToNow(new Date(project.updated_at), { addSuffix: true })}
       </div>
-    </Card>
+      </Card>
+    </Link>
   );
 }

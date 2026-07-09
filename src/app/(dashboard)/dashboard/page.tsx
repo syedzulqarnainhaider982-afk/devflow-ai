@@ -6,7 +6,7 @@ import {
   ArrowRight, FolderOpen, Globe, Code2, MessageSquare, 
   Plus, Activity, Clock, Zap
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 
 import { Card } from "@/components/ui/card";
@@ -31,7 +31,6 @@ interface ActivityItem {
 }
 
 export default function DashboardPage() {
-  const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -100,15 +99,21 @@ export default function DashboardPage() {
           animate={{ opacity: 1, x: 0 }}
           className="flex flex-wrap gap-3"
         >
-          <Button onClick={() => router.push("/dashboard/projects")} className="bg-blue-600 hover:bg-blue-700 text-white">
-            <Plus className="w-4 h-4 mr-2" /> New Project
-          </Button>
-          <Button onClick={() => router.push("/dashboard/code-gen")} className="bg-green-600 hover:bg-green-700 text-white">
-            <Code2 className="w-4 h-4 mr-2" /> Gen Code
-          </Button>
-          <Button onClick={() => router.push("/dashboard/chat")} className="bg-purple-600 hover:bg-purple-700 text-white">
-            <MessageSquare className="w-4 h-4 mr-2" /> New Chat
-          </Button>
+          <Link href="/dashboard/projects">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Plus className="w-4 h-4 mr-2" /> New Project
+            </Button>
+          </Link>
+          <Link href="/dashboard/code-gen">
+            <Button className="bg-green-600 hover:bg-green-700 text-white">
+              <Code2 className="w-4 h-4 mr-2" /> Gen Code
+            </Button>
+          </Link>
+          <Link href="/dashboard/chat">
+            <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+              <MessageSquare className="w-4 h-4 mr-2" /> New Chat
+            </Button>
+          </Link>
         </motion.div>
       </div>
 
@@ -180,9 +185,9 @@ export default function DashboardPage() {
                       {getIconForType(activity.type)}
                     </span>
                     
-                    <div 
-                      className="bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl p-4 transition cursor-pointer"
-                      onClick={() => router.push(activity.url)}
+                    <Link 
+                      href={activity.url}
+                      className="bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl p-4 transition cursor-pointer block"
                     >
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-2">
                         <div className="flex items-center gap-3">
@@ -200,7 +205,7 @@ export default function DashboardPage() {
                           {activity.description}
                         </p>
                       )}
-                    </div>
+                    </Link>
                   </div>
                 ))}
               </div>
@@ -219,11 +224,10 @@ export default function DashboardPage() {
           </h3>
           <div className="grid grid-cols-1 gap-4">
             {features.map((feature, index) => (
-              <Card 
-                key={feature.href}
-                className="p-5 bg-black/40 border-white/5 hover:bg-white/10 transition cursor-pointer flex items-center justify-between group"
-                onClick={() => router.push(feature.href)}
-              >
+              <Link href={feature.href} key={feature.href} className="block">
+                <Card 
+                  className="p-5 bg-black/40 border-white/5 hover:bg-white/10 transition cursor-pointer flex items-center justify-between group"
+                >
                 <div className="flex items-center gap-4">
                   <div className={cn("p-2.5 rounded-xl bg-white/5", feature.color)}>
                     <feature.icon className="w-6 h-6" />
@@ -233,7 +237,8 @@ export default function DashboardPage() {
                   </h3>
                 </div>
                 <ArrowRight className="w-5 h-5 text-white/20 group-hover:text-white/60 transition-transform group-hover:translate-x-1" />
-              </Card>
+                </Card>
+              </Link>
             ))}
           </div>
         </motion.div>
