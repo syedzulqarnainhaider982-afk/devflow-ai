@@ -2,13 +2,14 @@
 "use client";
 
 import { useEffect, useRef, useState, useMemo } from "react";
-import { MessageSquare, Send, Bot, User, Loader2, Square, ArrowDown, Trash2 } from "lucide-react";
+import { MessageSquare, Send, Bot, User, Loader2, Square, ArrowDown, Trash2, Clock } from "lucide-react";
 import { useChat } from "@ai-sdk/react";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 import { createClient } from "@/utils/supabase/client";
 
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { SUPPORTED_AI_MODELS, getDefaultModelId } from "@/config/models";
@@ -31,6 +32,13 @@ export default function AIChatPage() {
       const data = await res.json();
       if (res.ok && data.success) {
         setSessions(data.sessions || []);
+        
+        // Restore session from localStorage if available
+        const savedSessionId = localStorage.getItem("devflow_active_chat_session");
+        if (savedSessionId && data.sessions?.some((s: any) => s.id === savedSessionId)) {
+          setActiveSessionId(savedSessionId);
+          loadSessionMessages(savedSessionId);
+        }
       }
     } catch (e) {
       console.error("Failed to fetch sessions", e);
@@ -154,9 +162,12 @@ export default function AIChatPage() {
           body: JSON.stringify({ title }),
         });
         const data = await res.json();
-        if (res.ok && data.success) {
+        if (res.ok && data.success && data.session?.id) {
           currentSessionId = data.session.id;
           setActiveSessionId(currentSessionId);
+          if (currentSessionId) {
+            localStorage.setItem("devflow_active_chat_session", currentSessionId);
+          }
           setSessions(prev => [data.session, ...prev]);
         }
       }
@@ -206,12 +217,14 @@ export default function AIChatPage() {
 
   const selectSession = (id: string) => {
     setActiveSessionId(id);
+    localStorage.setItem("devflow_active_chat_session", id);
     loadSessionMessages(id);
   };
 
   const handleNewChat = () => {
     setActiveSessionId(null);
     setMessages([]);
+    localStorage.removeItem("devflow_active_chat_session");
   };
 
   const confirmDelete = (id: string, e: React.MouseEvent) => {
@@ -244,72 +257,101 @@ export default function AIChatPage() {
     setItemToDelete(null);
   };
 
+  const historySidebarContent = (
+    <div className="flex flex-col h-full min-h-0">
+      <Button 
+        onClick={handleNewChat}
+        className="w-full bg-violet-600 hover:bg-violet-700 text-white shadow-lg shrink-0 mb-4"
+      >
+        + New Chat
+      </Button>
+
+      <div className="glass-card rounded-2xl border border-white/10 p-4 flex flex-col flex-1 min-h-0">
+        <h3 className="font-medium text-white mb-4 flex items-center justify-between">
+          History
+          <span className="text-xs text-white/50 bg-black/40 px-2 py-1 rounded-full">{sessions.length}</span>
+        </h3>
+        
+        <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+          {isLoadingSessions ? (
+            <div className="text-center text-white/40 py-4 flex flex-col items-center">
+              <Loader2 className="w-4 h-4 animate-spin mb-2" />
+              Loading...
+            </div>
+          ) : sessions.length === 0 ? (
+            <div className="text-center text-white/40 py-4 text-sm">No chats yet.</div>
+          ) : (
+            sessions.map((session) => (
+              <div 
+                key={session.id} 
+                onClick={() => selectSession(session.id)}
+                className={`p-3 bg-white/5 hover:bg-white/10 border ${activeSessionId === session.id ? 'border-violet-500/50 bg-violet-500/10' : 'border-white/5'} rounded-xl cursor-pointer transition group flex flex-col gap-2`}
+              >
+                <div className="flex justify-between items-start">
+                  <h4 className="text-sm font-medium text-white line-clamp-1">{session.title || "New Chat"}</h4>
+                  
+                  {itemToDelete === session.id ? (
+                    <div className="flex items-center gap-1">
+                      <button onClick={(e) => executeDelete(session.id, e)} className="text-[10px] bg-red-500/20 text-red-500 px-1.5 py-0.5 rounded hover:bg-red-500/30">Yes</button>
+                      <button onClick={cancelDelete} className="text-[10px] bg-white/10 text-white px-1.5 py-0.5 rounded hover:bg-white/20">No</button>
+                    </div>
+                  ) : (
+                    <button 
+                      onClick={(e) => confirmDelete(session.id, e)}
+                      className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 transition-opacity p-0.5 shrink-0"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto h-[calc(100vh-80px)] flex flex-col space-y-6">
-      <div className="mb-2">
-        <h2 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-          <MessageSquare className="w-8 h-8 text-violet-500" />
-          DevFlow AI Chat
-        </h2>
-        <p className="text-muted-foreground text-lg mt-2">
-          Your elite pair-programming assistant powered by Vercel AI SDK.
-        </p>
+      <div className="mb-2 flex justify-between items-center">
+        <div>
+          <h2 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+            <MessageSquare className="w-8 h-8 text-violet-500" />
+            DevFlow AI Chat
+          </h2>
+          <p className="text-muted-foreground text-lg mt-2">
+            Your elite pair-programming assistant powered by Vercel AI SDK.
+          </p>
+        </div>
+        
+        {/* Mobile History Drawer Trigger */}
+        <div className="lg:hidden">
+          <Sheet>
+            <SheetTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium bg-white/5 border border-white/10 text-white hover:bg-white/10 h-10 px-4 py-2 transition-colors">
+              <Clock className="w-4 h-4 mr-2" />
+              History
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[300px] sm:w-[400px] bg-[#050505] border-r border-white/10 p-6 flex flex-col">
+              <SheetHeader className="mb-6 px-0 text-left">
+                <SheetTitle className="text-white flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5 text-violet-500" />
+                  Chat History
+                </SheetTitle>
+              </SheetHeader>
+              <div className="flex-1 min-h-0 overflow-hidden">
+                {historySidebarContent}
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
 
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0">
         
         {/* Left Column: History */}
-        <div className="hidden lg:flex lg:col-span-3 flex-col gap-4 min-h-0 overflow-hidden">
-          <Button 
-            onClick={handleNewChat}
-            className="w-full bg-violet-600 hover:bg-violet-700 text-white shadow-lg shrink-0"
-          >
-            + New Chat
-          </Button>
-
-          <div className="glass-card rounded-2xl border border-white/10 p-4 flex flex-col flex-1 min-h-0">
-            <h3 className="font-medium text-white mb-4 flex items-center justify-between">
-              History
-              <span className="text-xs text-white/50 bg-black/40 px-2 py-1 rounded-full">{sessions.length}</span>
-            </h3>
-            
-            <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
-              {isLoadingSessions ? (
-                <div className="text-center text-white/40 py-4 flex flex-col items-center">
-                  <Loader2 className="w-4 h-4 animate-spin mb-2" />
-                  Loading...
-                </div>
-              ) : sessions.length === 0 ? (
-                <div className="text-center text-white/40 py-4 text-sm">No chats yet.</div>
-              ) : (
-                sessions.map((session) => (
-                  <div 
-                    key={session.id} 
-                    onClick={() => selectSession(session.id)}
-                    className={`p-3 bg-white/5 hover:bg-white/10 border ${activeSessionId === session.id ? 'border-violet-500/50 bg-violet-500/10' : 'border-white/5'} rounded-xl cursor-pointer transition group flex flex-col gap-2`}
-                  >
-                    <div className="flex justify-between items-start">
-                      <h4 className="text-sm font-medium text-white line-clamp-1">{session.title || "New Chat"}</h4>
-                      
-                      {itemToDelete === session.id ? (
-                        <div className="flex items-center gap-1">
-                          <button onClick={(e) => executeDelete(session.id, e)} className="text-[10px] bg-red-500/20 text-red-500 px-1.5 py-0.5 rounded hover:bg-red-500/30">Yes</button>
-                          <button onClick={cancelDelete} className="text-[10px] bg-white/10 text-white px-1.5 py-0.5 rounded hover:bg-white/20">No</button>
-                        </div>
-                      ) : (
-                        <button 
-                          onClick={(e) => confirmDelete(session.id, e)}
-                          className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 transition-opacity p-0.5 shrink-0"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+        <div className="hidden lg:flex lg:col-span-3 flex-col min-h-0 overflow-hidden">
+          {historySidebarContent}
         </div>
 
         {/* Right Column: Chat Interface */}
